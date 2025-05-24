@@ -1,0 +1,15 @@
+service:
+  max_messages_per_queue: 1000
+  persist_interval_sec: 30
+  persist_file: "queues.json"
+
+  default_queues:
+    - transactions
+    - results
+
+security:
+  tokens:
+    admin: "ADMIN_TOKEN"
+    agents:
+      - "AGENT_TOKEN_1"
+      - "AGENT_TOKEN_2"
