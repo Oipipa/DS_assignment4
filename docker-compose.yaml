@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Queue daemon service
+  queue-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud_queue_daemon
+    ports:
+      - "7500:7500"
+    volumes:
+      - ./:/app
+    networks:
+      - fraud-network
+    command: ["python", "queue_daemon/main.py"]
+
+  # MPI prediction service with 5 worker nodes
+  mpi-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud_mpi_service
+    depends_on:
+      - queue-daemon
+    volumes:
+      - ./:/app
+    networks:
+      - fraud-network
+    command: ["mpirun", "--allow-run-as-root", "-np", "5", "python", "mpi_predictor/main.py"]
+    environment:
+      - MODEL_PATH=fraud_rf_model.pkl
+      - QUEUE_URL=http://queue-daemon:7500
+      - INPUT_QUEUE=transactions
+      - OUTPUT_QUEUE=results
+      - TOKEN=AGENT_TOKEN_1
+
+networks:
+  fraud-network:
+    driver: bridge
+    name: fraud-detection-network
